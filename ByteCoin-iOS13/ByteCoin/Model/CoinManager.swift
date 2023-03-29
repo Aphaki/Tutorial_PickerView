@@ -10,12 +10,12 @@ import Foundation
 
 protocol CoinManagerDelegate {
     func didFailWithError(error: Error)
-    func didUpdateCoinPrice(_ coinManager: CoinManager, rates: [Rate])
+    func didUpdateCoinPrice(rates: [Rate])
 }
 
 struct CoinManager {
     
-    let baseURL = "https://rest.coinapi.io/v1/exchangerate/BTC"
+    let baseURL = "https://rest.coinapi.io/v1/exchangerate/BTC?apikey=878E4423-AF7E-4075-A04A-1D3EA03B07A3"
     let apiKey = "878E4423-AF7E-4075-A04A-1D3EA03B07A3"
     let currencyArray = ["AUD", "BRL","CAD","CNY","EUR","GBP","HKD","IDR","ILS","INR","JPY","KRW","MXN","NOK","NZD","PLN","RON","RUB","SEK","SGD","USD","ZAR"]
     
@@ -25,8 +25,9 @@ struct CoinManager {
         
     }
     
-    func performRequest(with urlString: String) {
-        guard let url = URL(string: urlString) else {
+    func performRequest() {
+        
+        guard let url = URL(string: baseURL) else {
             print("!! Invalid URL !!")
             return }
         let session = URLSession(configuration: .default)
@@ -39,10 +40,15 @@ struct CoinManager {
             if let safeData = data {
                 if let decodedData = self.parseJSON(safeData) {
                     let myRates = customFiltering(totalRates: decodedData.rates, myCurrencyArray: currencyArray)
-                    self.delegate?.didUpdateCoinPrice(self, rates: myRates)
+                    self.delegate?.didUpdateCoinPrice(rates: myRates)
+                } else {
+                    print("data decode error")
                 }
+            } else {
+                print("data is not found")
             }
         }
+        task.resume()
     }
     
     private func parseJSON(_ data: Data) -> RateData? {
